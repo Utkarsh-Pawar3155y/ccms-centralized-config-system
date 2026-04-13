@@ -13,7 +13,8 @@ When you run 'uvicorn app.main:app', Python:
   - Finds the 'app' variable (the FastAPI instance)
   - Starts the web server
 """
-
+from fastapi import WebSocket, WebSocketDisconnect
+from app.websocket_manager import manager
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -167,3 +168,13 @@ def list_services(db=None):
             next(gen)
         except StopIteration:
             pass
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            await websocket.receive_text()  # keep connection alive
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)

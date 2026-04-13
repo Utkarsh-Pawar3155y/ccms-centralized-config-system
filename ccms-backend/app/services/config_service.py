@@ -21,6 +21,8 @@ Architecture:
     HTTP Response ← Route ← Service ← CRUD ← Database
 """
 
+from app.websocket_manager import manager
+import asyncio
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
@@ -45,7 +47,22 @@ def create_config_service(db: Session, config_data: ConfigCreate) -> ConfigRespo
             detail=str(e)
         )
 
-    return ConfigResponse.from_orm_model(new_config)
+    response = ConfigResponse.from_orm_model(new_config)
+
+    # 🔥 Send real-time update
+    async def send_update():
+        await manager.broadcast({
+            "event": "config_created",
+            "service": response.service_name,
+            "environment": response.environment,
+            "key": response.key,
+            "value": response.value,
+            "version": response.version
+        })
+
+    asyncio.run(send_update())
+
+    return response
 
 
 def get_configs_service(
@@ -118,7 +135,25 @@ def update_config_service(
             detail=f"Config with id={config_id} not found"
         )
 
-    return ConfigResponse.from_orm_model(updated_config)
+    response = ConfigResponse.from_orm_model(updated_config)
+
+    async def send_update():
+        await manager.broadcast({
+            "event": "config_updated",
+            "service": response.service_name,
+            "environment": response.environment,
+            "key": response.key,
+            "value": response.value,
+            "version": response.version
+        })
+
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(send_update())
+    except RuntimeError:
+        asyncio.run(send_update())
+
+    return response
 
 
 def delete_config_service(db: Session, config_id: int) -> MessageResponse:
