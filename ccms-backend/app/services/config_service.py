@@ -222,3 +222,54 @@ def get_all_services_service(db: Session) -> dict:
         "total_service_environments": len(services),
         "services": services
     }
+
+
+def rollback_config_service(
+    db,
+    service_name: str,
+    environment: str,
+    config_key: str,
+    target_version: int
+):
+    """
+    Rollback configuration to previous version.
+    """
+
+    rollbacked = crud.rollback_config(
+        db,
+        service_name,
+        environment,
+        config_key,
+        target_version
+    )
+
+    if rollbacked is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Target version not found"
+        )
+
+    response = ConfigResponse.from_orm_model(rollbacked)
+
+    # REAL-TIME EVENT
+    async def send_update():
+        await manager.broadcast({
+            "event": "config_rollback",
+            "service": response.service_name,
+            "environment": response.environment,
+            "key": response.key,
+            "value": response.value,
+            "version": response.version
+        })
+
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(send_update())
+    except RuntimeError:
+        asyncio.run(send_update())
+
+    return {
+        "message": f"Rollback successful to version {target_version}",
+        "rollback_version": response.version,
+        "config": response
+    }

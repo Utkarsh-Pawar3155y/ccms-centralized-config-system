@@ -252,3 +252,63 @@ def get_all_services(db: Session) -> list[dict]:
         {"service_name": row.service_name, "environment": row.environment}
         for row in results
     ]
+
+
+def rollback_config(
+    db,
+    service_name: str,
+    environment: str,
+    config_key: str,
+    target_version: int
+):
+    """
+    Rollback a config key to a previous version.
+
+    IMPORTANT:
+    We do NOT overwrite old rows.
+    We create a NEW row using the old value.
+    """
+
+    # Find target version
+    target_config = (
+        db.query(Config)
+        .filter(
+            Config.service_name == service_name,
+            Config.environment == environment,
+            Config.config_key == config_key,
+            Config.version == target_version
+        )
+        .first()
+    )
+
+    if not target_config:
+        return None
+
+    # Find latest version
+    latest_config = (
+        db.query(Config)
+        .filter(
+            Config.service_name == service_name,
+            Config.environment == environment,
+            Config.config_key == config_key
+        )
+        .order_by(Config.version.desc())
+        .first()
+    )
+
+    new_version = latest_config.version + 1
+
+    # Create NEW config row using old value
+    rollback_entry = Config(
+        service_name=service_name,
+        environment=environment,
+        config_key=config_key,
+        config_value=target_config.config_value,
+        version=new_version
+    )
+
+    db.add(rollback_entry)
+    db.commit()
+    db.refresh(rollback_entry)
+
+    return rollback_entry

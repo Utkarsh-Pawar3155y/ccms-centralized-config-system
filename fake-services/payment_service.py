@@ -62,8 +62,8 @@ def on_message(ws, message):
     data = json.loads(message)
 
     if data.get("service") == SERVICE_NAME:
+        print(f"\n📡 EVENT RECEIVED: {data['event']}")
         apply_update(data)
-
 
 def on_open(ws):
     print("Connected to CCMS WebSocket...")

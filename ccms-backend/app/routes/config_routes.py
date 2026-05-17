@@ -24,6 +24,8 @@ from app.schemas import (
 )
 from app.services import config_service
 
+from app.services.config_service import rollback_config_service
+
 # APIRouter groups related endpoints together
 # prefix="/configs" means all routes here start with /configs
 # tags=["Configurations"] groups them in Swagger UI
@@ -237,3 +239,24 @@ def get_all_config_history(db: Session = Depends(get_db)):
         ConfigResponse.from_orm_model(c)
         for c in configs
     ]
+
+
+
+@router.post(
+    "/rollback/{service_name}/{environment}/{config_key}/{target_version}",
+    tags=["Rollback"]
+)
+def rollback_config(
+    service_name: str,
+    environment: str,
+    config_key: str,
+    target_version: int,
+    db: Session = Depends(get_db)
+):
+    return rollback_config_service(
+        db,
+        service_name,
+        environment,
+        config_key,
+        target_version
+    )
