@@ -5,8 +5,11 @@ import {
   FilePlus2,
   History,
   Terminal,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
 
 const navItems = [
   { title: "Dashboard", to: "/", icon: LayoutDashboard },
@@ -17,6 +20,7 @@ const navItems = [
 
 export function AppSidebar() {
   const { pathname } = useLocation();
+  const { user, logout } = useAuth();
 
   return (
     <aside className="hidden md:flex w-60 flex-col border-r border-border bg-sidebar min-h-screen">
@@ -51,8 +55,19 @@ export function AppSidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="px-5 py-4 border-t border-border">
-        <p className="text-xs text-muted-foreground">CCMS v1.0</p>
+      <div className="px-5 py-4 border-t border-border mt-auto flex flex-col gap-3">
+        <div className="flex flex-col">
+          <span className="text-sm font-medium text-foreground truncate">
+            {user?.username || "Guest"}
+          </span>
+          <span className="text-xs text-muted-foreground uppercase tracking-wider">
+            Role: <span className="font-semibold text-primary">{user?.role || "N/A"}</span>
+          </span>
+        </div>
+        <Button variant="outline" size="sm" onClick={logout} className="w-full justify-start text-muted-foreground hover:text-foreground">
+          <LogOut className="h-4 w-4 mr-2" />
+          Logout
+        </Button>
       </div>
     </aside>
   );

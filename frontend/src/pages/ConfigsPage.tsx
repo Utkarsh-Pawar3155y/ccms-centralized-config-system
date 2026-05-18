@@ -31,6 +31,7 @@ import {
 import { Pencil, Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
+import { RoleGuard } from "@/components/RoleGuard";
 
 export default function ConfigsPage() {
   const [configs, setConfigs] = useState<Config[]>([]);
@@ -165,9 +166,11 @@ export default function ConfigsPage() {
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(c)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <RoleGuard allowedRoles={['admin']}>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </RoleGuard>
                     </div>
                   </TableCell>
                 </TableRow>

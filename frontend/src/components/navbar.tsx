@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Settings2, FilePlus2, History, Terminal } from "lucide-react";
+import { LayoutDashboard, Settings2, FilePlus2, History, Terminal, LogOut } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
   { title: "Dashboard", to: "/", icon: LayoutDashboard },
@@ -15,6 +16,7 @@ const navItems = [
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { pathname } = useLocation();
+  const { user, logout } = useAuth();
 
   return (
     <>
@@ -35,11 +37,14 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon">
-            <Bell className="h-4 w-4" />
+          <span className="text-sm font-medium mr-2 hidden md:block">
+            {user?.username || "Guest"}
+          </span>
+          <Button variant="ghost" size="icon" onClick={logout} title="Logout">
+            <LogOut className="h-4 w-4" />
           </Button>
-          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
-            A
+          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground uppercase">
+            {user?.username?.[0] || "?"}
           </div>
         </div>
       </header>

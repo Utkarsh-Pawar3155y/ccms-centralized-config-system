@@ -6,6 +6,27 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("ccms_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("ccms_token");
+      localStorage.removeItem("ccms_username");
+      localStorage.removeItem("ccms_role");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const configApi = {
   /** Create a new configuration */
   create: (data: CreateConfigPayload) => {

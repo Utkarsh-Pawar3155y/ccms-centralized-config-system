@@ -9,6 +9,9 @@ import ConfigsPage from "@/pages/ConfigsPage";
 import CreateConfigPage from "@/pages/CreateConfigPage";
 import VersionHistoryPage from "@/pages/VersionHistoryPage";
 import NotFound from "@/pages/NotFound";
+import Login from "@/pages/Login";
+import { AuthProvider } from "@/context/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -17,17 +20,24 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route element={<DashboardLayout />}>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/configs" element={<ConfigsPage />} />
-            <Route path="/create-config" element={<CreateConfigPage />} />
-            <Route path="/history" element={<VersionHistoryPage />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            
+            <Route element={<ProtectedRoute />}>
+              <Route element={<DashboardLayout />}>
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/configs" element={<ConfigsPage />} />
+                <Route path="/create-config" element={<CreateConfigPage />} />
+                <Route path="/history" element={<VersionHistoryPage />} />
+              </Route>
+            </Route>
+
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
